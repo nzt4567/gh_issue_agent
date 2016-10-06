@@ -1,3 +1,9 @@
+# auth.cfg with tokens
+auth.cfg
+
+#intelliJ
+.idea
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
