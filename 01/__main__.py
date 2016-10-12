@@ -126,7 +126,7 @@ def main(args):
         response = requests.get(api + user + '/' + args['repo'] + '/issues', headers=headers)
 
         if response.status_code != 304:
-            headers['If-None-Match'] = response.headers['etag']  # if 'etag' in response.headers else None
+            headers['If-None-Match'] = response.headers['etag'] if 'etag' in response.headers else None
 
             if response.status_code == 200:
                 request = {'api': api, 'user': user, 'headers': headers}
