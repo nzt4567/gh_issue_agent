@@ -4,6 +4,12 @@ import configparser
 import os
 import time
 import re
+from flask import Flask
+from flask import render_template
+from flask import request as flask_request
+
+args = {}
+app = Flask(__name__)
 
 """
     GitHub issue ROBOT
@@ -103,7 +109,7 @@ def parse_file(file):
     return config  # return ConfigParser() object
 
 
-def main(args):
+def console_main(args):
     """ get issues from github and label them """
 
     ret = []
@@ -143,17 +149,7 @@ def main(args):
     # pp(ret)
 
 
-@click.command()
-@click.option('--repo', default='r1', help='default repo to watch')
-@click.option('--auth-file', default='auth.cfg', help='path to auth file')
-@click.option('--label-file', default='labels.cfg', help='path to label definitions file')
-@click.option('--interval', default=10, help='how often to check for issues; in sec')
-@click.option('--default-label', default='take-a-look-personally', help='default label')
-@click.option('--comments', default=True, help='check comments')
-@click.option('--output', default=None, help='path to file used instead of stdout')
 def parse_args(repo, auth_file, label_file, interval, default_label, comments, output):
-    """ parse command line arguments """
-
     auth = parse_file(auth_file)
 
     if 'github' not in auth or 'token' not in auth['github']:
@@ -174,14 +170,57 @@ def parse_args(repo, auth_file, label_file, interval, default_label, comments, o
     if output:
         output = open(output, 'a')
 
-    return main({'token': auth['github']['token'],
-                 'labels': labels['labels'],
-                 'repo': repo,
-                 'interval': interval,
-                 'default_label': default_label,
-                 'comments': comments,
-                 'output': output})
+    return {'token': auth['github']['token'],
+            'labels': labels['labels'],
+            'repo': repo,
+            'interval': interval,
+            'default_label': default_label,
+            'comments': comments,
+            'output': output}
 
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+@click.option('--repo', default='r1', help='default repo to watch')
+@click.option('--auth-file', default='auth.cfg', help='path to auth file')
+@click.option('--label-file', default='labels.cfg', help='path to label definitions file')
+@click.option('--interval', default=10, help='how often to check for issues; in sec')
+@click.option('--default-label', default='take-a-look-personally', help='default label')
+@click.option('--comments', default=True, help='check comments')
+@click.option('--output', default=None, help='path to file used instead of stdout')
+def web(repo, auth_file, label_file, interval, default_label, comments, output):
+    global args
+    args = parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
+    app.run()
+
+
+@cli.command()
+@click.option('--repo', default='r1', help='default repo to watch')
+@click.option('--auth-file', default='auth.cfg', help='path to auth file')
+@click.option('--label-file', default='labels.cfg', help='path to label definitions file')
+@click.option('--interval', default=10, help='how often to check for issues; in sec')
+@click.option('--default-label', default='take-a-look-personally', help='default label')
+@click.option('--comments', default=True, help='check comments')
+@click.option('--output', default=None, help='path to file used instead of stdout')
+def console(repo, auth_file, label_file, interval, default_label, comments, output):
+    return console_main(parse_args(repo, auth_file, label_file, interval, default_label, comments, output))
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/hook', methods=['POST'])
+def hook():
+    data = flask_request.get_json()
+    print(data)
+
+    return ''
 
 if __name__ == '__main__':
-    parse_args()
+    cli()
