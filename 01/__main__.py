@@ -4,12 +4,12 @@ import configparser
 import os
 import time
 import re
-from flask import Flask
+from flask import Flask as F
 from flask import render_template
 from flask import request as flask_request
 
 args = {}
-app = Flask(__name__)
+app = F(__name__)
 
 """
     GitHub issue ROBOT
@@ -222,5 +222,5 @@ def hook():
 
     return ''
 
-if __name__ == '__main__':
-    cli()
+# if __name__ == '__main__':
+#     cli()
