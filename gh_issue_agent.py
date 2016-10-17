@@ -221,19 +221,21 @@ def hook():
     user = 'mi-pyt-label-robot'
     token = parse_file('auth.cfg')['github']['token']
     labels = parse_file('labels.cfg')['labels']
+    labels = {re.compile(r, re.IGNORECASE): v for r, v in labels.items()}
     api = 'https://api.github.com/repos/'
     headers = {'Authorization': 'token ' + token, 'User-Agent': user}
 
-    if not issue['labels']:
-        issue['labels'] = [label for regexp, label in labels.items()
-                           if re.search(regexp, issue['title']) or re.search(regexp, issue['body'])]
+    if not issue['issue']['labels']:
+        issue['issue']['labels'] = [label for regexp, label in labels.items()
+                                    if re.search(regexp, issue['issue']['title']) or
+                                    re.search(regexp, issue['issue']['body'])]
 
-        if not issue['labels']:
-            issue['labels'] = ['take-a-look-personally']
+        if not issue['issue']['labels']:
+            issue['issue']['labels'] = ['take-a-look-personally']
 
-        del issue['assignee']
+        del issue['issue']['assignee']
         r = requests.patch(api + user + '/' + issue['repository']['name'] + '/issues/' +
-                           str(issue['number']), json=issue, headers=headers)
+                           str(issue['issue']['number']), json=issue['issue'], headers=headers)
 
         if r.status_code != 200:
             print("Editing labels failed:", str(r.status_code), '/', str(r.json()))
