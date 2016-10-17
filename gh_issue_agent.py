@@ -4,12 +4,12 @@ import configparser
 import os
 import time
 import re
-from flask import Flask as F
+from flask import Flask
 from flask import render_template
 from flask import request as flask_request
 
 args = {}
-app = F(__name__)
+app = Flask(__name__)
 
 """
     GitHub issue ROBOT
@@ -212,14 +212,31 @@ def console(repo, auth_file, label_file, interval, default_label, comments, outp
 
 @app.route('/')
 def index():
-    return "ASDFGDEBUG"
-    # return render_template('index.html')
+    return render_template('index.html')
 
 
 @app.route('/hook', methods=['POST'])
 def hook():
-    data = flask_request.get_json()
-    print(data)
+    issue = flask_request.get_json()
+    user = 'mi-pyt-label-robot'
+    token = parse_file('auth.cfg')['github']['token']
+    labels = parse_file('labels.cfg')['labels']
+    api = 'https://api.github.com/repos/'
+    headers = {'Authorization': 'token ' + token, 'User-Agent': user}
+
+    if not issue['labels']:
+        issue['labels'] = [label for regexp, label in labels.items()
+                           if re.search(regexp, issue['title']) or re.search(regexp, issue['body'])]
+
+        if not issue['labels']:
+            issue['labels'] = ['take-a-look-personally']
+
+        del issue['assignee']
+        r = requests.patch(api + user + '/' + issue['repository']['name'] + '/issues/' +
+                           str(issue['number']), json=issue, headers=headers)
+
+        if r.status_code != 200:
+            print("Editing labels failed:", str(r.status_code), '/', str(r.json()))
 
     return ''
 
