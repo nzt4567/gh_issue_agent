@@ -18,7 +18,7 @@ app = Flask(__name__)
     kvasntom@fit.cvut.cz
 
     GitHub Robot Account
-    user: mi-pyt-label-robot
+    default user: mi-pyt-label-robot
     pass: see auth.cfg
 
     - requirements: https://edux.fit.cvut.cz/courses/MI-PYT/tutorials/01_requests_click
@@ -83,7 +83,7 @@ def process_response(response, request, labels, args):
                 issue['labels'] = [args['default_label']]
 
             del issue['assignee']  # GH APIv3 requires this
-            r = requests.patch(request['api'] + request['user'] + '/' + args['repo'] + '/issues/' +
+            r = requests.patch(request['api'] + args['repo'] + '/issues/' +
                                str(issue['number']), json=issue, headers=request['headers'])
 
             if r.status_code != 200:
@@ -113,10 +113,9 @@ def console_main(args):
     """ get issues from github and label them """
 
     ret = []
-    user = 'mi-pyt-label-robot'
     api = 'https://api.github.com/repos/'
     regexp = {re.compile(r, re.IGNORECASE): v for r, v in args['labels'].items()}
-    headers = {'Authorization': 'token ' + args['token'], 'User-Agent': user}
+    headers = {'Authorization': 'token ' + args['token'], 'User-Agent': 'label-robot'}
 
     i = 0  # FIXME: Change to 'while True' if script is supposed to run forever
     while i < 3:
@@ -129,13 +128,13 @@ def console_main(args):
         # and http://stackoverflow.com/questions/26435831/getting-strange-connection-aborted-errors-with-python-requests
         # and http://stackoverflow.com/questions/30192033/python-script-stops-responding-after-a-while
         # and appropriate issues on github page of requests module. Not going to solve this now. Conditionals anyway.
-        response = requests.get(api + user + '/' + args['repo'] + '/issues', headers=headers)
+        response = requests.get(api + args['repo'] + '/issues', headers=headers)
 
         if response.status_code != 304:
             headers['If-None-Match'] = response.headers['etag'] if 'etag' in response.headers else None
 
             if response.status_code == 200:
-                request = {'api': api, 'user': user, 'headers': headers}
+                request = {'api': api, 'headers': headers}
                 ret += process_response(response, request, regexp, args)
             else:
                 print('Fetching issues for', args['repo'], 'failed:', str(response.status_code), '/', response.text,
@@ -185,7 +184,7 @@ def cli():
 
 
 @cli.command()
-@click.option('--repo', default='r1', help='default repo to watch')
+@click.option('--repo', default='mi-pyt-label-robot/r1', help='default repo to watch, including username')
 @click.option('--auth-file', default='auth.cfg', help='path to auth file')
 @click.option('--label-file', default='labels.cfg', help='path to label definitions file')
 @click.option('--interval', default=10, help='how often to check for issues; in sec')
@@ -199,7 +198,7 @@ def web(repo, auth_file, label_file, interval, default_label, comments, output):
 
 
 @cli.command()
-@click.option('--repo', default='r1', help='default repo to watch')
+@click.option('--repo', default='mi-pyt-label-robot/r1', help='default repo to watch, including username')
 @click.option('--auth-file', default='auth.cfg', help='path to auth file')
 @click.option('--label-file', default='labels.cfg', help='path to label definitions file')
 @click.option('--interval', default=10, help='how often to check for issues; in sec')
