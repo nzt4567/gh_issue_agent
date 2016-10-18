@@ -2,9 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Web GH app gateway</title>
+    <title>GH issues hook</title>
 </head>
 <body>
-Usage of this web server is very easy
+<h1>Usage of this web server is very easy.</h1>
+<h2>It provides an easy endpoint for GitHub webhook. </h2>
+
+<p>
+    It accepts events about issues and creates labels based on its configuration. To test it simply go to
+    <a href="https://github.com/mi-pyt-label-robot/r1/issues">my-testing-github-account</a> and create a new issue. If
+    its title or body matches one of the pre-defined regular expressions it will be labeled with appropriate label.
+    Otherwise, it will be labeled with my default label which currently is 'take-a-look-personally'.
+    <br>
+    The following keywords are currently recognized, case insensitive: "ASAP", "bug", "serious", "now". Please feel free
+    to test them.
+</p>
 </body>
 </html>

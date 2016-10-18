@@ -8,7 +8,7 @@ from flask import Flask
 from flask import render_template
 from flask import request as flask_request
 
-args = {}
+g_args = None
 app = Flask(__name__)
 
 """
@@ -193,8 +193,8 @@ def cli():
 @click.option('--comments', default=True, help='check comments')
 @click.option('--output', default=None, help='path to file used instead of stdout')
 def web(repo, auth_file, label_file, interval, default_label, comments, output):
-    global args
-    args = parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
+    global g_args
+    g_args = parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
     app.run()
 
 
@@ -217,13 +217,17 @@ def index():
 
 @app.route('/hook', methods=['POST'])
 def hook():
+    if not g_args:
+        token = parse_file('auth.cfg')['github']['token']
+        labels = parse_file('labels.cfg')['labels']
+        labels = {re.compile(r, re.IGNORECASE): v for r, v in labels.items()}
+    else:
+        token = g_args['token']
+        labels = {re.compile(r, re.IGNORECASE): v for r, v in g_args['labels'].items()}
+
     issue = flask_request.get_json()
-    user = 'mi-pyt-label-robot'
-    token = parse_file('auth.cfg')['github']['token']
-    labels = parse_file('labels.cfg')['labels']
-    labels = {re.compile(r, re.IGNORECASE): v for r, v in labels.items()}
     api = 'https://api.github.com/repos/'
-    headers = {'Authorization': 'token ' + token, 'User-Agent': user}
+    headers = {'Authorization': 'token ' + token, 'User-Agent': 'webhook-gh'}
 
     if not issue['issue']['labels']:
         issue['issue']['labels'] = [label for regexp, label in labels.items()
@@ -234,8 +238,12 @@ def hook():
             issue['issue']['labels'] = ['take-a-look-personally']
 
         del issue['issue']['assignee']
-        r = requests.patch(api + user + '/' + issue['repository']['name'] + '/issues/' +
-                           str(issue['issue']['number']), json=issue['issue'], headers=headers)
+        if g_args is None:
+            r = requests.patch(api + 'mi-pyt-label-robot/' + issue['repository']['name'] + '/issues/' +
+                               str(issue['issue']['number']), json=issue['issue'], headers=headers)
+        else:
+            r = requests.patch(api + g_args['repo'] + '/issues/' +
+                               str(issue['issue']['number']), json=issue['issue'], headers=headers)
 
         if r.status_code != 200:
             print("Editing labels failed:", str(r.status_code), '/', str(r.json()))
