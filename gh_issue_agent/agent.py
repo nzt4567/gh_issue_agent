@@ -18,7 +18,7 @@ app = Flask(__name__)
     kvasntom@fit.cvut.cz
 
     GitHub Robot Account
-    default user: mi-pyt-label-robot
+    default user: gh_issue_agent-label-robot
     pass: see auth.cfg
 
     - requirements: https://edux.fit.cvut.cz/courses/MI-PYT/tutorials/01_requests_click
@@ -109,6 +109,12 @@ def parse_file(file):
     return config  # return ConfigParser() object
 
 
+def web_main(args):
+    global g_args
+    g_args = args
+    app.run()
+
+
 def console_main(args):
     """ get issues from github and label them """
 
@@ -184,7 +190,7 @@ def cli():
 
 
 @cli.command()
-@click.option('--repo', default='mi-pyt-label-robot/r1', help='default repo to watch, including username')
+@click.option('--repo', default='gh_issue_agent-label-robot/r1', help='default repo to watch, including username')
 @click.option('--auth-file', default='auth.cfg', help='path to auth file')
 @click.option('--label-file', default='labels.cfg', help='path to label definitions file')
 @click.option('--interval', default=10, help='how often to check for issues; in sec')
@@ -192,13 +198,11 @@ def cli():
 @click.option('--comments', default=True, help='check comments')
 @click.option('--output', default=None, help='path to file used instead of stdout')
 def web(repo, auth_file, label_file, interval, default_label, comments, output):
-    global g_args
-    g_args = parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
-    app.run()
+    return web_main(parse_args(repo, auth_file, label_file, interval, default_label, comments, output))
 
 
 @cli.command()
-@click.option('--repo', default='mi-pyt-label-robot/r1', help='default repo to watch, including username')
+@click.option('--repo', default='gh_issue_agent-label-robot/r1', help='default repo to watch, including username')
 @click.option('--auth-file', default='auth.cfg', help='path to auth file')
 @click.option('--label-file', default='labels.cfg', help='path to label definitions file')
 @click.option('--interval', default=10, help='how often to check for issues; in sec')
@@ -238,7 +242,7 @@ def hook():
 
         del issue['issue']['assignee']
         if g_args is None:
-            r = requests.patch(api + 'mi-pyt-label-robot/' + issue['repository']['name'] + '/issues/' +
+            r = requests.patch(api + 'gh_issue_agent-label-robot/' + issue['repository']['name'] + '/issues/' +
                                str(issue['issue']['number']), json=issue['issue'], headers=headers)
         else:
             r = requests.patch(api + g_args['repo'] + '/issues/' +
@@ -249,5 +253,6 @@ def hook():
 
     return ''
 
-if __name__ == '__main__':
+
+def main():
     cli()

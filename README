@@ -1,0 +1,6 @@
+# mi-pyt
+Created for the MI-PYT course @ FIT CTU
+
+This project currently implements a GitHub-Issue-Labeling-Robot. 
+It means that it connects to GH, searches issues and labels them based 
+on given config. And it has a package on testing PyPI.
