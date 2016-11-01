@@ -23,6 +23,8 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5'],
     install_requires=['flask', 'requests', 'click', 'jinja2'],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'gh_issue_agent = gh_issue_agent.agent:main',
