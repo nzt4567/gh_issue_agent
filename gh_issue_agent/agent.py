@@ -106,7 +106,7 @@ def parse_file(file):
     config = configparser.ConfigParser()
     config.read(file)
 
-    return config  # return ConfigParser() object
+    return {s: dict(config.items(s)) for s in config.sections()}
 
 
 def web_main(args):
