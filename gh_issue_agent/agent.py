@@ -2,7 +2,6 @@ import requests
 import click
 import configparser
 import os
-import time
 import re
 from flask import Flask
 from flask import render_template
@@ -134,9 +133,13 @@ def console_main(args):
     else:
         print('Fetching issues for', args['repo'], 'failed:', str(response.status_code), '/', response.text,
               file=args['output'])
+        return 1
 
-    # from pprint import pprint as pp
-    # pp(ret)
+    for r in ret:
+        if not r[0]:
+            return 1
+
+    return 0
 
 
 def parse_args(repo, auth_file, label_file, interval, default_label, comments, output):

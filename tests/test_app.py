@@ -4,10 +4,26 @@ import io
 import configparser
 from flexmock import flexmock
 import os
+import betamax
+
+with betamax.Betamax.configure() as config:
+    config.cassette_library_dir = 'tests/cassetes'
+    if 'AUTH_FILE' in os.environ:
+        auth_config = configparser.ConfigParser()
+        auth_config.read(os.environ['AUTH_FILE'])
+
+        auth = {s: dict(auth_config.items(s)) for s in auth_config.sections()}
+        token = auth['github']['token']
+        config.default_cassette_options['record_mode'] = 'all'
+    else:
+        token = 'XXXXXXXX'
+        config.default_cassette_options['record_mode'] = 'none'
+
+    config.define_cassette_placeholder('<TOKEN>', token)
 
 
 @pytest.mark.parametrize(['repo', 'auth_file', 'label_file', 'interval', 'default_label', 'comments', 'output'],
-                         [('gh_issue_agent-label-robot/r1',
+                         [('mi-pyt-label-robot/r1',
                            'imaginary_auth.cfg',
                            'imaginary_labels.cfg',
                            10,
@@ -57,3 +73,11 @@ def flask_app():
 
 def test_web(flask_app):
     assert 'Usage of this web server is very easy.' in flask_app.get('/').data.decode('utf-8')
+
+
+def test_console(betamax_session):
+    args = {'token': token, 'labels': {'.*bug.*': 'possible_bug', '.*now.*': 'ASAP'}, 'repo': 'mi-pyt-label-robot/r1',
+            'interval': 10, 'default_label': 'default-test-label', 'comments': False, 'output': None,
+            'session': betamax_session}
+
+    assert gh.console_main(args) == 0
