@@ -1,2 +1,4 @@
 include LICENSE
 include gh_issue_agent/templates/index.html
+include tests/cassetes/*
+include tests/*
