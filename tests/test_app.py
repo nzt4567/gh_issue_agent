@@ -32,7 +32,7 @@ def test_args(repo, auth_file, label_file, interval, default_label, comments, ou
         mock.should_call('sections')
         mock.should_receive('sections').and_return(['github', 'labels'])
         mock.should_call('items')
-        mock.should_receive('items').with_args('github').and_return({'token': 'XXXXXXX'})
+        mock.should_receive('items').with_args('github').and_return({'token': 'XXXXXXXXXX'})
         mock.should_receive('items').with_args('labels').and_return({'.*bug.*': 'possible_bug', '.*now.*': 'ASAP'})
 
         args = gh.parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
@@ -47,3 +47,13 @@ def test_args(repo, auth_file, label_file, interval, default_label, comments, ou
     else:
         with pytest.raises(FileNotFoundError):
             gh.parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
+
+
+@pytest.fixture
+def flask_app():
+    gh.app.config['TESTING'] = True
+    return gh.app.test_client()
+
+
+def test_web(flask_app):
+    assert 'Usage of this web server is very easy.' in flask_app.get('/').data.decode('utf-8')

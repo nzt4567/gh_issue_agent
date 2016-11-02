@@ -40,7 +40,7 @@ app = Flask(__name__)
 def download_comments(comments_url, request, args):
     ret = []
 
-    response = requests.get(comments_url, headers=request['headers'])
+    response = args['session'].get(comments_url, headers=request['headers'])
     if 'link' in response.headers:
         links = response.headers['link'].split(',')
         links = {x.split("rel=")[1].strip('"'): x.split(';')[0].strip('<').strip('>') for x in links}
@@ -64,7 +64,7 @@ def process_response(response, request, labels, args):
         links = {x.split("rel=")[1].strip('"'): x.split(';')[0].strip('<').strip('>') for x in links}
 
         if 'next' in links:
-            r = requests.get(links['next'], headers=request['headers'])
+            r = args['session'].get(links['next'], headers=request['headers'])
             ret += process_response(r, request, labels, args)
 
     for issue in response.json():
@@ -83,8 +83,8 @@ def process_response(response, request, labels, args):
                 issue['labels'] = [args['default_label']]
 
             del issue['assignee']  # GH APIv3 requires this
-            r = requests.patch(request['api'] + args['repo'] + '/issues/' +
-                               str(issue['number']), json=issue, headers=request['headers'])
+            r = args['session'].patch(request['api'] + args['repo'] + '/issues/' +
+                                      str(issue['number']), json=issue, headers=request['headers'])
 
             if r.status_code != 200:
                 print("Editing labels failed:", str(r.status_code), '/', str(r.json()), file=args['output'])
@@ -123,32 +123,17 @@ def console_main(args):
     regexp = {re.compile(r, re.IGNORECASE): v for r, v in args['labels'].items()}
     headers = {'Authorization': 'token ' + args['token'], 'User-Agent': 'label-robot'}
 
-    i = 0  # FIXME: Change to 'while True' if script is supposed to run forever
-    while i < 3:
-        i += 1
+    if 'session' not in args:
+        args['session'] = requests.session()
 
-        # When using requests.Session() GH sometimes returns something wrong, requests are unable to handle it and
-        # requests.exceptions.ConnectionError: ('Connection aborted.', BadStatusLine("''",)) is raised.
-        #
-        # See http://stackoverflow.com/questions/25326616/unexpected-keyword-argument-buffering-python-client
-        # and http://stackoverflow.com/questions/26435831/getting-strange-connection-aborted-errors-with-python-requests
-        # and http://stackoverflow.com/questions/30192033/python-script-stops-responding-after-a-while
-        # and appropriate issues on github page of requests module. Not going to solve this now. Conditionals anyway.
-        response = requests.get(api + args['repo'] + '/issues', headers=headers)
+    response = args['session'].get(api + args['repo'] + '/issues', headers=headers)
 
-        if response.status_code != 304:
-            headers['If-None-Match'] = response.headers['etag'] if 'etag' in response.headers else None
-
-            if response.status_code == 200:
-                request = {'api': api, 'headers': headers}
-                ret += process_response(response, request, regexp, args)
-            else:
-                print('Fetching issues for', args['repo'], 'failed:', str(response.status_code), '/', response.text,
-                      file=args['output'])
-        else:
-            print("GitHub output unchanged, no action needed", file=args['output'])
-
-        time.sleep(args['interval'])
+    if response.status_code == 200:
+        request = {'api': api, 'headers': headers}
+        ret += process_response(response, request, regexp, args)
+    else:
+        print('Fetching issues for', args['repo'], 'failed:', str(response.status_code), '/', response.text,
+              file=args['output'])
 
     # from pprint import pprint as pp
     # pp(ret)
@@ -190,7 +175,7 @@ def cli():
 
 
 @cli.command()
-@click.option('--repo', default='gh_issue_agent-label-robot/r1', help='default repo to watch, including username')
+@click.option('--repo', default='mi-pyt-label-robot/r1', help='default repo to watch, including username')
 @click.option('--auth-file', default='auth.cfg', help='path to auth file')
 @click.option('--label-file', default='labels.cfg', help='path to label definitions file')
 @click.option('--interval', default=10, help='how often to check for issues; in sec')
@@ -202,7 +187,7 @@ def web(repo, auth_file, label_file, interval, default_label, comments, output):
 
 
 @cli.command()
-@click.option('--repo', default='gh_issue_agent-label-robot/r1', help='default repo to watch, including username')
+@click.option('--repo', default='mi-pyt-label-robot/r1', help='default repo to watch, including username')
 @click.option('--auth-file', default='auth.cfg', help='path to auth file')
 @click.option('--label-file', default='labels.cfg', help='path to label definitions file')
 @click.option('--interval', default=10, help='how often to check for issues; in sec')
