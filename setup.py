@@ -6,7 +6,7 @@ with open('README') as f:
  
 setup(
     name='gh_issue_agent',
-    version='0.2',
+    version='0.5',
     description='Automatic Labels for GitHub Issues',
     author='Tomas Kvasnicka',
     author_email='nzt4567@gmx.com',
