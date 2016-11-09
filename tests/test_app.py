@@ -22,7 +22,7 @@ with betamax.Betamax.configure() as config:
     config.define_cassette_placeholder('<TOKEN>', token)
 
 
-@pytest.mark.parametrize(['repo', 'auth_file', 'label_file', 'interval', 'default_label', 'comments', 'output'],
+@pytest.mark.parametrize(['repo', 'auth_file', 'label_file', 'default_label', 'comments', 'output'],
                          [('mi-pyt-label-robot/r1',
                            'imaginary_auth.cfg',
                            'imaginary_labels.cfg',
@@ -74,7 +74,7 @@ def test_web(flask_app):
 
 def test_console(betamax_session):
     args = {'token': token, 'labels': {'.*bug.*': 'possible_bug', '.*now.*': 'ASAP'}, 'repo': 'mi-pyt-label-robot/r1',
-            'interval': 10, 'default_label': 'default-test-label', 'comments': False, 'output': None,
+            'default_label': 'default-test-label', 'comments': False, 'output': None,
             'session': betamax_session}
 
     assert gh.console_main(args) == 0
