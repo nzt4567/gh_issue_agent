@@ -2,3 +2,7 @@ include LICENSE
 include gh_issue_agent/templates/index.html
 include tests/cassetes/*
 include tests/*
+include doc/*
+include doc/source/*
+include doc/source/_static/*
+include doc/source/_templates/*

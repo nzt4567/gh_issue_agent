@@ -26,18 +26,16 @@ with betamax.Betamax.configure() as config:
                          [('mi-pyt-label-robot/r1',
                            'imaginary_auth.cfg',
                            'imaginary_labels.cfg',
-                           10,
                            'take-a-look-personally',
                            True,
                            None),
                           ('another/repo',
                            '/non-existing-file',
                            '/another-one',
-                           10,
                            'asdfg',
                            False,
                            '/dev/null')])
-def test_args(repo, auth_file, label_file, interval, default_label, comments, output):
+def test_args(repo, auth_file, label_file, default_label, comments, output):
     if auth_file == 'imaginary_auth.cfg' and label_file == 'imaginary_labels.cfg':
         mock = flexmock(os.path)
         mock.should_call('isfile')
@@ -51,18 +49,17 @@ def test_args(repo, auth_file, label_file, interval, default_label, comments, ou
         mock.should_receive('items').with_args('github').and_return({'token': 'XXXXXXXXXX'})
         mock.should_receive('items').with_args('labels').and_return({'.*bug.*': 'possible_bug', '.*now.*': 'ASAP'})
 
-        args = gh.parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
+        args = gh.parse_args(repo, auth_file, label_file, default_label, comments, output)
 
         assert type(args['token']) == str and args['token'] != ''
         assert type(args['labels']) == dict and args['labels']
         assert args['repo'] == repo
-        assert args['interval'] == interval
         assert args['default_label'] == default_label
         assert args['comments'] == comments
         assert not args['output'] or type(args['output']) == io.TextIOWrapper
     else:
         with pytest.raises(FileNotFoundError):
-            gh.parse_args(repo, auth_file, label_file, interval, default_label, comments, output)
+            gh.parse_args(repo, auth_file, label_file, default_label, comments, output)
 
 
 @pytest.fixture

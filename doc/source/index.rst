@@ -11,7 +11,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
+   api
+   doctest
+   about
+   installation
 
 Indices and tables
 ==================
@@ -20,7 +23,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. automodule:: gh_issue_agent
-    :synopsis: Process GitHub issues and label them based on user-defined rules
-    :members:
 

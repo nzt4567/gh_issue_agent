@@ -13,3 +13,5 @@ to re-record it using your own github account set the AUTH_FILE='/path/to/config
 have to change the code of the tests, as they cannot currently accept parameters from the command line (not even sure
 this is possible) and therefore you need to change `repo` path.
 
+To build the documentation use `make html` inside of the `doc` directory. To run doctests simply run `make doctest` in
+the same directory. Also, you need to have package `sphinx` installed.

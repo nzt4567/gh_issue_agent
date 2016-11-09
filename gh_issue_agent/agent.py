@@ -13,7 +13,7 @@ app = Flask(__name__)
 """
     .. moduleauthor:: Tomas Kvasnicka <kvasntom@fit.cvut.cz>
     :synopsis: Process GitHub issues and label them based on user-defined rules
-    
+
     GitHub Robot Account
     default user: mi-pyt-label-robot
     pass: see auth.cfg
